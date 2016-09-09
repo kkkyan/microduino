@@ -23,6 +23,7 @@ AM2321 am2321;
 Timer t;
 unsigned short int timeID;
 unsigned short int checkID;
+unsigned short int waterID;
 /*********************Timer Done************/
 
 /*********************IRrecv**********************/
@@ -46,6 +47,7 @@ bool onAlarm = 0;       //闹钟运行状态
 bool flag_fan;      //电扇开关
 bool flag_fanTime;  //风扇定时启动开关
 bool flag_fanClose; //风扇定时关闭开关
+bool flag_waterl;   //水泵开关
 
 unsigned short int aH;  //闹钟小时
 unsigned short int aM;  //闹钟分钟
@@ -54,7 +56,7 @@ unsigned short int fM;  //风扇分钟
 unsigned short int fOn; //风扇持续时间
 unsigned short int fcH; //风扇关闭小时
 unsigned short int fcM; //风扇关闭分钟
-unsigned short int fLevel;  //风扇风力
+//unsigned short int fLevel;  //风扇风力
 unsigned short int coolState = 0; //cool模式状态
 
 char ans[] = {'A', 'A', 'B', 'C', 'D', 'C', 'A', 'C'};
@@ -105,11 +107,11 @@ void setup() {
   EEPROM_read(8, fH);
   EEPROM_read(10, fM);
   EEPROM_read(12, fOn);
-  EEPROM_read(14, fLevel);
+  //EEPROM_read(14, fLevel);
 
   timeID = t.every(500, timeshow);
   checkID = t.every(1000, checkState);
-
+  waterID = t.every(1000, cool);
   //pinMode(sensorPin_1, INPUT);
   //pinMode(sensorPin_2, INPUT);
 
@@ -144,10 +146,18 @@ void loop() {
         setAlert();
         break;
       case 33439935:    //B cool模式
-        if (coolState < 2) {
-          coolState++;
-        } else {
-          coolState = 0;
+        switch(coolState){
+          case 0:
+            coolState = 1;
+            break;
+          case 1:
+            coolState = 2;
+            my_Serial.print("C");
+            break;
+          default:
+            coolState = 0;
+            my_Serial.print("c");
+            break;
         }
         break;
       case 33468495:    //Mute 风扇定时关闭
@@ -160,11 +170,11 @@ void loop() {
         flag_fan = !flag_fan;
         EEPROM_write(1, flag_fan);
         (flag_fan == 1) ? my_Serial.println("F") : my_Serial.println("f");
-        if (fLevel == 0) {
-          fLevel = 50;
-          EEPROM_write(14, fLevel);
-        }
-        my_Serial.println(fLevel);
+//        if (fLevel == 0) {
+//          fLevel = 50;
+//          EEPROM_write(14, fLevel);
+//        }
+//        my_Serial.println(fLevel);
         break;
       case 33444015:    //Reset reset the system time
         settime();
@@ -173,25 +183,25 @@ void loop() {
         my_Serial.println("a");
         onAlarm = 0;
         break;
-      case 33464415:  //up 调整风扇风力
-        if (flag_fan == true && fLevel < 100) {
-          fLevel++;
-          EEPROM_write(14, fLevel);
-          my_Serial.println(fLevel);
-        }
-        break;
-      case 33478695:  //down 调整风扇风力
-        if (flag_fan == true && fLevel > 0) {
-          fLevel--;
-          EEPROM_write(14, fLevel);
-          my_Serial.println(fLevel);
-          if (fLevel == 0) {
-            flag_fan = 0;
-            EEPROM_write(1, flag_fan);
-            my_Serial.println("f");
-          }
-        }
-        break;
+//      case 33464415:  //up 调整风扇风力
+//        if (flag_fan == true && fLevel < 100) {
+//          fLevel++;
+//          EEPROM_write(14, fLevel);
+//          my_Serial.println(fLevel);
+//        }
+//        break;
+//      case 33478695:  //down 调整风扇风力
+//        if (flag_fan == true && fLevel > 0) {
+//          fLevel--;
+//          EEPROM_write(14, fLevel);
+//          my_Serial.println(fLevel);
+//          if (fLevel == 0) {
+//            flag_fan = 0;
+//            EEPROM_write(1, flag_fan);
+//            my_Serial.println("f");
+//          }
+//        }
+//        break;
       default:
         break;
     }
@@ -280,6 +290,7 @@ void settime() {
 
   soft_restart();
 }
+
 void timeshow() {     //显示时间
   am2321.read();      //获取温湿度
 
@@ -312,7 +323,7 @@ void timeshow() {     //显示时间
       default: display.print(" "); break;
     }
     display.print("F");
-    display.print(fLevel);
+    //display.print(fLevel);
   } else {
     display.print("   ");
   }
@@ -539,8 +550,15 @@ void setFanClose() {
   }
 }
 
-void Cool() {
-  return ;
+void cool() {   //根据环境喷水模式
+  if(coolState == 1){
+    am2321.read();
+    if((am2321.temperature / 10.0) > 30 && (am2321.humidity / 10) < 40){
+      my_Serial.print("C");
+    }else{
+      my_Serial.print("c");
+    }
+  }
 }
 
 void checkState() {   //检查时间，发送命令
@@ -558,7 +576,7 @@ void checkState() {   //检查时间，发送命令
 
   if (flag_fanTime == 1  && (now_Hour == fH && now_Min == fM && rtc.getSecond() == 0)) { //风扇定时启动
     my_Serial.println("F");
-    my_Serial.println(fLevel);
+    //my_Serial.println(fLevel);
     flag_fan = 1;
     flag_fanTime = 0;
     EEPROM_write(2, flag_fanTime);

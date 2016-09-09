@@ -12,7 +12,7 @@ unsigned short int alarmID;
 unsigned short int fanID;
 unsigned short int servoID;
 unsigned short int alarm_eID;
-unsigned short int delay_ID;
+unsigned short int delayID;
 /*********************Timer Done************/
 
 /*********************Timer********************/
@@ -84,11 +84,16 @@ int lenth = 0; //音乐长度
 int music_p = 0;
 
 bool flag_alarm = 0;    //闹钟开关
-bool flag_fan;      //风扇开关
+bool flag_fan = 0;      //风扇开关
+bool flag_water = 0;    //水泵开关
 
 //D6，D8控制1A，1B的电机
 #define OUT2A 5
 #define OUT2B 7
+int fan_pin = 8;
+
+//Dealy
+int delay_pin = 10;
 
 //闹钟
 String ques[] = {"A.quetch  B.quatch  C.quitch  D.cuetch",
@@ -106,19 +111,19 @@ void setup()
   Serial.begin(9600);
   my_Serial.begin(9600);
 
-  flag_fan=1;
-  fz= 255;
-  
+
   //init Motor
-  pinMode(OUT2A, OUTPUT);
-  pinMode(OUT2B, OUTPUT);
-  myservo.attach(9);   //Servo pin
+  pinMode(fan_pin, OUTPUT);
+  pinMode(delay_pin, OUTPUT);
+  pinMode(OUT2A , OUTPUT);
+  pinMode(OUT2B , OUTPUT);
+  myservo.attach(9);   //Servo pin 9
 
   alarmID = t.every(1000, playMusic);
   alarm_eID = t.every(2000, english);
-  fanID = t.every(1000, onFan);
+  //fanID = t.every(1000, onFan);
   servoID = t.every(15, onServo);
-  delay_ID = t.every(1000, water);
+  delayID = t.every(5000, water);
   t.every(10, recMsg);
 
   lenth = sizeof(tune) / sizeof(tune[0]); //计算长度
@@ -128,10 +133,8 @@ void setup()
   //初始化mp3模块
   audio_init(DEVICE_TF,MODE_One_END,music_vol);    //初始化mp3模块
 
-
-  //delay
-  pinMode(10,OUTPUT);
-  
+  digitalWrite(OUT2A, HIGH);
+  digitalWrite(OUT2B, HIGH);
 }
 
 void loop()
@@ -170,21 +173,19 @@ void playMusic() {    //闹钟演奏
   //  }
   //  delay(2000);
 }
-
-void onFan() {  //风扇控制
-  if (flag_fan == 0) {
-    digitalWrite(OUT2A, LOW);
-    digitalWrite(OUT2B, LOW);
-  } else {
-    if (fz != 0 && flag_alarm == 0) {
-      digitalWrite(OUT2A, LOW);
-      int lv = float(fz) / 100 * 255;
-      Serial.println(lv);
-      analogWrite(OUT2B, lv);
-    }
-
-  }
-}
+//
+//void onFan() {  //风扇控制
+//  if (flag_fan == 0) {
+//    digitalWrite(fan_pin, LOW);
+//  } else {
+//    if (fz != 0 && flag_alarm == 0) {
+//      int lv = float(fz) / 100 * 255;
+//      Serial.println(lv);
+//      analogWrite(fan_pin, lv);
+//    }
+//
+//  }
+//}
 
 void onServo() {  //舵机控制
   if (flag_fan == 0) {
@@ -224,9 +225,17 @@ void recMsg() {
           break;
         case 'F':
           flag_fan = 1;
+          digitalWrite(fan_pin, HIGH);
           break;
         case 'f':
           flag_fan = 0;
+          digitalWrite(fan_pin, LOW);
+          break;
+        case 'C':
+          flag_water = 1;
+          break;
+        case 'c':
+          flag_water = 0;
           break;
       }
     }
@@ -251,12 +260,17 @@ void english() {  //单词播放函数
       //Serial.println(ques[fz]);
       fileNum = no;
     }
-  }
+  } 
 }
 
-void water(){   //水雾
-  digitalWrite(10, HIGH);
-  delay(50);
-  digitalWrite(10, LOW);
+void water(){
+  if(flag_water == 0){
+    digitalWrite(delay_pin, LOW);
+    return;
+  }else{
+    digitalWrite(delay_pin,HIGH);
+    delay(1000);
+    digitalWrite(delay_pin,LOW);
+  }
 }
 
