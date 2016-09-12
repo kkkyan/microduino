@@ -88,9 +88,9 @@ bool flag_fan = 0;      //风扇开关
 bool flag_water = 0;    //水泵开关
 
 //D6，D8控制1A，1B的电机
-#define OUT2A 5
-#define OUT2B 7
-int fan_pin = 8;
+//#define OUT2A 5
+//#define OUT2B 7
+int fan_pin = 12;
 
 //Dealy
 int delay_pin = 10;
@@ -115,10 +115,10 @@ void setup()
   //init Motor
   pinMode(fan_pin, OUTPUT);
   pinMode(delay_pin, OUTPUT);
-  pinMode(OUT2A , OUTPUT);
-  pinMode(OUT2B , OUTPUT);
+//  (OUT2A , OUTPUT);
+  //pinMode(OUT2B , OUTPUT);
   myservo.attach(9);   //Servo pin 9
-
+  myservo.write(90);   //init servo
   alarmID = t.every(1000, playMusic);
   alarm_eID = t.every(2000, english);
   //fanID = t.every(1000, onFan);
@@ -132,9 +132,6 @@ void setup()
 
   //初始化mp3模块
   audio_init(DEVICE_TF,MODE_One_END,music_vol);    //初始化mp3模块
-
-  digitalWrite(OUT2A, HIGH);
-  digitalWrite(OUT2B, HIGH);
 }
 
 void loop()
@@ -231,10 +228,10 @@ void recMsg() {
           flag_fan = 0;
           digitalWrite(fan_pin, LOW);
           break;
-        case 'C':
+        case 'D':
           flag_water = 1;
           break;
-        case 'c':
+        case 'd':
           flag_water = 0;
           break;
       }
@@ -269,7 +266,7 @@ void water(){
     return;
   }else{
     digitalWrite(delay_pin,HIGH);
-    delay(1000);
+    delay(500);
     digitalWrite(delay_pin,LOW);
   }
 }

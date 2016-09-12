@@ -152,11 +152,11 @@ void loop() {
             break;
           case 1:
             coolState = 2;
-            my_Serial.print("C");
+            my_Serial.println("D");
             break;
           default:
             coolState = 0;
-            my_Serial.print("c");
+            my_Serial.println("d");
             break;
         }
         break;
@@ -554,9 +554,9 @@ void cool() {   //根据环境喷水模式
   if(coolState == 1){
     am2321.read();
     if((am2321.temperature / 10.0) > 30 && (am2321.humidity / 10) < 40){
-      my_Serial.print("C");
+      my_Serial.println("D");
     }else{
-      my_Serial.print("c");
+      my_Serial.println("d");
     }
   }
 }
@@ -595,7 +595,7 @@ void answer() {
   t.stop(timeID);
   t.stop(checkID);
 
-  while (now_ques < 5) {
+  while (now_ques < 3) {
     display.clearDisplay();
 
     while (my_Serial.read() >= 0) {}  //清空串口值，很重要！真的很重要！！！
@@ -644,7 +644,7 @@ void answer() {
     }
     irrecv.resume();
 
-    if (now_ques == 5) {
+    if (now_ques == 3) {
       my_Serial.println('a');
       now_ques = 0;
       onAlarm = 0;
