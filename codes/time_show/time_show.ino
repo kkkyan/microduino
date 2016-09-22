@@ -21,9 +21,9 @@ AM2321 am2321;
 #include <Timer.h>   //中断
 #include <Event.h>
 Timer t;
-unsigned short int timeID;
-unsigned short int checkID;
-unsigned short int waterID;
+unsigned short int timeID;    //时间显示任务ID
+unsigned short int checkID;   //检查状态任务ID
+unsigned short int waterID;   //水泵状态ID
 /*********************Timer Done************/
 
 /*********************IRrecv**********************/
@@ -65,9 +65,8 @@ uint8_t last_ques = 0;
 #include <SoftReset.h>    //软重启必须头文件
 
 /*蓝牙通信*/
-#define my_Serial Serial1 //定义串口通讯为串口1
+#define my_Serial Serial1 //定义蓝牙通讯为串口1
 String msg = ""; //定义一个字符串
-
 
 
 void setup() {
@@ -91,8 +90,10 @@ void setup() {
   // to make them visible on the display hardware!
   display.display();
 
-  //settime(16, 7, 6, 3, 10, 26, 10);//年，月，日，星期，时，分，秒  //已下载，请勿取消注释
-
+  //day, weekday, month, century(1=1900, 0=2000), year(0-99)
+  //rtc.setDate(22, 4, 9, 0, 16);
+//  //hr, min, sec
+  //rtc.setTime(, 18, 0);
   irrecv.enableIRIn();
 
   EEPROM_read(0, flag_alarm);
@@ -177,7 +178,7 @@ void loop() {
 //        my_Serial.println(fLevel);
         break;
       case 33444015:    //Reset reset the system time
-        settime();
+ //       settime();
         break;
       case 33427695:  //OK test
         my_Serial.println("a");
@@ -210,86 +211,86 @@ void loop() {
 
 }
 
-void settime() {
-  unsigned short int otime[5];
-  otime[0] = rtc.getYear();
-  otime[1] = rtc.getMonth();
-  otime[2] = rtc.getDay();
-  otime[3] = rtc.getHour();
-  otime[4] = rtc.getMinute();
-  //otime[5] = rtc.getSecond();
-
-  char state[]={'Y','M','D','H','i'};
-  unsigned short int i = 0;
-  t.stop(timeID);
-  bool setPoint = 0;  //0设置小时，1设置分钟
-  while (i < 5) {
-    display.clearDisplay();
-
-    display.setTextColor(WHITE);
-    display.setCursor(0,0);
-  
-    display.setTextSize(1);
-    display.print("Set System Time:  ");
-    display.println(state[i]);
-    
-    display.setTextSize(2);
-
-    display.print(" ");
-    display.print(2000 + otime[0]);
-    display.print("-");
-    display.print(otime[1]);
-    display.print("-");
-    display.print(otime[2]);
-
-    display.print("   ");
-    display.print(otime[3]);
-    display.print(":");
-    display.print(otime[4]);
-
-    display.display();
-    if (irrecv.decode(&ir_res)) {
-      switch (ir_res.value) {
-        case 33464415:
-          otime[i]++;
-          break;
-        case 33478695:
-          otime[i]--;
-          break;
-        case 33480735:
-          if (i != 0) i--;
-          break;
-        case 33460335:
-          i++;
-          break;
-        case 33427695:
-          i = 7;
-          break;
-        case 33441975:    //On 退出
-          timeID = t.every(500, timeshow);
-          irrecv.resume();
-          return;
-        default:
-          break;
-      }
-      irrecv.resume();
-    }
-  }
-  //clear out the registers
-  rtc.initClock();
-  //set a time to start with.
-  //day, weekday, month, century(1=1900, 0=2000), year(0-99)
-  rtc.setDate(otime[2], 1, otime[1], 0, otime[0]);
-  //hr, min, sec
-  rtc.setTime(otime[3], otime[4], 0);
-
-  display.clearDisplay();
-  display.println("success!please wait for rebooting");
-  display.display();
-  delay(2000);
-
-  soft_restart();
-}
+//void settime() {
+//  unsigned short int otime[5];
+//  otime[0] = rtc.getYear();
+//  otime[1] = rtc.getMonth();
+//  otime[2] = rtc.getDay();
+//  otime[3] = rtc.getHour();
+//  otime[4] = rtc.getMinute();
+//  //otime[5] = rtc.getSecond();
+//
+//  char state[]={'Y','M','D','H','i'};
+//  unsigned short int i = 0;
+//  t.stop(timeID);
+//  bool setPoint = 0;  //0设置小时，1设置分钟
+//  while (i < 5) {
+//    display.clearDisplay();
+//
+//    display.setTextColor(WHITE);
+//    display.setCursor(0,0);
+//  
+//    display.setTextSize(1);
+//    display.print("Set System Time:  ");
+//    display.println(state[i]);
+//    
+//    display.setTextSize(2);
+//
+//    display.print(" ");
+//    display.print(2000 + otime[0]);
+//    display.print("-");
+//    display.print(otime[1]);
+//    display.print("-");
+//    display.print(otime[2]);
+//
+//    display.print("   ");
+//    display.print(otime[3]);
+//    display.print(":");
+//    display.print(otime[4]);
+//
+//    display.display();
+//    if (irrecv.decode(&ir_res)) {
+//      switch (ir_res.value) {
+//        case 33464415:
+//          otime[i]++;
+//          break;
+//        case 33478695:
+//          otime[i]--;
+//          break;
+//        case 33480735:
+//          if (i != 0) i--;
+//          break;
+//        case 33460335:
+//          i++;
+//          break;
+//        case 33427695:
+//          i = 7;
+//          break;
+//        case 33441975:    //On 退出
+//          timeID = t.every(500, timeshow);
+//          irrecv.resume();
+//          return;
+//        default:
+//          break;
+//      }
+//      irrecv.resume();
+//    }
+//  }
+//  //clear out the registers
+//  rtc.initClock();
+//  //set a time to start with.
+//  //day, weekday, month, century(1=1900, 0=2000), year(0-99)
+//  rtc.setDate(otime[2], 1, otime[1], 0, otime[0]);
+//  //hr, min, sec
+//  rtc.setTime(otime[3], otime[4], 0);
+//
+//  display.clearDisplay();
+//  display.println("success!please wait for rebooting");
+//  display.display();
+//  delay(2000);
+//
+//  soft_restart();
+//}
 
 void timeshow() {     //显示时间
   am2321.read();      //获取温湿度
@@ -324,21 +325,24 @@ void timeshow() {     //显示时间
     }
     display.print("F");
     //display.print(fLevel);
-  } else {
-    display.print("   ");
-  }
+  } 
+//  else {
+//    display.print("   ");
+//  }
 
   if (flag_alarm == 1) {
     display.print(" A");
-  } else {
-    display.print(" ");
-  }
+  } 
+//  else {
+//    display.print(" ");
+//  }
 
   if (flag_fanTime) {
     display.print(" T");
-  } else {
-    display.print(" ");
   }
+//  else {
+//    display.print(" ");
+//  }
 
   if (flag_fanClose) {
     display.print(" ");
@@ -535,8 +539,10 @@ void setFanClose() {
         case 33427695:   //ok
           EEPROM_write(12, fOn);
           flag_fanClose = 1;
-          fcH = rtc.getHour() + fOn;
-          fcM = rtc.getMinute();
+          //fcH = rtc.getHour() + fOn;
+          //fcM = rtc.getMinute();
+          fcH = rtc.getHour();
+          fcM = rtc.getMinute()+1;  //test
           timeID = t.every(500, timeshow);
           irrecv.resume();
           return;
@@ -553,7 +559,7 @@ void setFanClose() {
 void cool() {   //根据环境喷水模式
   if(coolState == 1){
     am2321.read();
-    if((am2321.temperature / 10.0) > 30 && (am2321.humidity / 10) < 40){
+    if((am2321.temperature / 10.0) > 25 && (am2321.humidity / 10) < 50){
       my_Serial.println("D");
     }else{
       my_Serial.println("d");
@@ -599,7 +605,6 @@ void answer() {
     display.clearDisplay();
 
     while (my_Serial.read() >= 0) {}  //清空串口值，很重要！真的很重要！！！
-
     display.setTextSize(2);
     display.setTextColor(WHITE);
     display.setCursor(0,0);
@@ -613,9 +618,10 @@ void answer() {
     last_ques = no;
     my_Serial.println(no);
 
-    while (my_Serial.available() <= 0) {
+    while (my_Serial.available() <= 0) {  //等待接收
     }
 
+    msg = "";
     msg = my_Serial.readStringUntil('\n');
 
     display.print(msg);
@@ -626,7 +632,7 @@ void answer() {
     display.display();
 
     irrecv.resume();
-    while (!irrecv.decode(&ir_res)) {
+    while (!irrecv.decode(&ir_res)) {   //等待按键
     }
     switch (ir_res.value) {
       case 33456255:   //A

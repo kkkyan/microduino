@@ -8,17 +8,17 @@ int fz = 0;     //风力
 #include <Timer.h>   //中断
 #include <Event.h>
 Timer t;
-unsigned short int alarmID;
-unsigned short int fanID;
-unsigned short int servoID;
-unsigned short int alarm_eID;
-unsigned short int delayID;
+unsigned short int alarmID;   //闹钟ID
+unsigned short int fanID;     //风扇任务ID
+unsigned short int servoID;   //舵机任务ID
+unsigned short int alarm_eID; //闹钟单词ID
+unsigned short int delayID;   //水泵ID
 /*********************Timer Done************/
 
 /*********************Timer********************/
 #include <Servo.h>
 Servo myservo;
-unsigned short int pos = 0;
+unsigned short int pos = 30;
 /*********************Timer Done**************/
 
 
@@ -119,8 +119,9 @@ void setup()
   //pinMode(OUT2B , OUTPUT);
   myservo.attach(9);   //Servo pin 9
   myservo.write(90);   //init servo
+  
   alarmID = t.every(1000, playMusic);
-  alarm_eID = t.every(2000, english);
+    alarm_eID = t.every(3000, english);
   //fanID = t.every(1000, onFan);
   servoID = t.every(15, onServo);
   delayID = t.every(5000, water);
@@ -139,12 +140,12 @@ void loop()
   t.update();
 
   if (flag_fan == 1) {  //舵机控制
-    if (pos == 360) {
+    if (pos == 120) {
       pos = 0;
     } else {
       pos++;
     }
-    delay(20);
+    delay(50);
   }
 
 }
@@ -191,10 +192,10 @@ void onServo() {  //舵机控制
   } else {
     myservo.attach(9);
     int finalPos = 0;
-    if (pos > 180) {
-      finalPos = 360 - pos;
+    if (pos > 60) {
+      finalPos = 180 - pos;
     } else {
-      finalPos = pos;
+      finalPos = 60 + pos;
     }
     Serial.println(finalPos);
     myservo.write(finalPos);              // tell servo to go to position in variable 'pos'
@@ -251,10 +252,13 @@ void english() {  //单词播放函数
     
     if (fileNum != no) {
       while(my_Serial.read() >= 0){}    //清空串口值，很重要！真的很重要！！！
-      
+
+      Serial.println(ques[fz]);
+      my_Serial.flush();
       my_Serial.println(ques[fz]);
-      //my_Serial.flush();
+      my_Serial.flush();
       //Serial.println(ques[fz]);
+      
       fileNum = no;
     }
   } 
@@ -265,9 +269,11 @@ void water(){
     digitalWrite(delay_pin, LOW);
     return;
   }else{
-    digitalWrite(delay_pin,HIGH);
-    delay(500);
-    digitalWrite(delay_pin,LOW);
+    if(flag_fan == 1){
+      digitalWrite(delay_pin,HIGH);
+      delay(500);
+      digitalWrite(delay_pin,LOW);
+    }
   }
 }
 
