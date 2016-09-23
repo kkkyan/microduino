@@ -10,7 +10,21 @@
 ----------
 
 
-文件说明：
+## 文件说明 ##
 
 已附结题报告，供参考
 
+**SoftReset-master.zip**为软重启库
+
+**Timer-master.zip**为Timer时间库
+
+**Core1**控制机械部分
+
+**Core2**控制接受发送部分（详情请看报告）
+
+----------
+
+
+欢迎与我交流
+
+Email：[邮箱kaiyanchn@foxmail.com](Mailto:kaiyanchn@foxmail.com)
